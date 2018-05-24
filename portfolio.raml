@@ -1,0 +1,283 @@
+#%RAML 1.0
+resourceTypes:
+  key:
+title: tw stock portfolio API
+version: v1
+baseUri: http://api.portfolio.tw.stock.yahoo.com/
+
+types:
+  response:
+    properties:
+      id:
+        type: string
+        required: false
+      result_code:
+        type: integer
+        required: true
+      message:
+        type: string
+        required: false
+
+  symbol_info:
+    properties:
+      symbol:
+        type: string
+        required: true
+      name:
+        type: string
+        required: false
+      symbol_type:
+        type: string
+        required: false
+      service_id:
+        type: string
+        required: false
+    example: |
+      {
+        "symbol": "2302.TW",
+        "name": "麗正",
+        "symbol_type": "equity",
+        "service_id": "16"
+      }
+
+  symbol_data:
+    properties:
+      symbol_info:
+        type: symbol_info
+        required: true
+      holding:
+        type: holding_data[]
+        required: false
+    example: |
+      {
+        "symbol_info": {
+          "symbol": "2342.TW"
+        },
+        "holding":[
+        {
+          "id": "zzzzzz",
+          "date": "2018-05-09",
+          "shares": "1430",
+          "cost": "100.00"
+        },
+        {
+          "id": "xxxxxxx",
+          "date": "2018-02-09",
+          "shares": "1000",
+          "cost": "90.00"
+        }
+        ]
+      }
+  holding_data:
+    properties:
+      id:
+        type: string
+        required: false
+      date:
+        type: string
+        required: false
+      shares:
+        type: string
+        required: false
+      cost:
+        type: string
+        required: false
+      update:
+        type: string
+        required: false
+
+  view_data:
+    properties:
+      view_id: string
+      view_name: string
+      data: symbol_data[]
+
+/v1:
+  /portfolio:
+    /getSymbolInfo:
+      get:
+        queryParameters:
+          symbol:
+            type: string
+            required: true
+        responses:
+          200:
+            body:
+              application/json:
+                type: object
+                properties:
+                  name_list:
+                    properties:
+                      result:
+                        type: symbol_info[]
+                example: |
+                  {
+                    "name_list": {
+                      "result":[
+                        {
+                          "symbol": "2302.TW",
+                          "name": "麗正",
+                          "symbol_type": "equity",
+                          "service_id": "16"
+                        },
+                        {
+                          "symbol": "2303.TW",
+                          "name": "聯電",
+                          "symbol_type": "equity",
+                          "service_id": "16"
+                        }
+                      ]
+                    }
+                  }
+          404:
+            description: Data Access request is processed successfully. No resources could be found from this symbol and no further action will be executed later. This request should not be retried.
+          500:
+            description: Some unexpected error has occurred. This request should be retried.
+    /getWatchList:
+      get:
+        queryParameters:
+          guid:
+            type: string
+            required: true
+        responses:
+          200:
+            body:
+              application/json:
+                type: object
+                properties:
+                  watch_list:
+                    properties:
+                      result:
+                        type: view_data[]
+          404:
+            description: Data Access request is processed successfully. No resources could be found from this symbol and no further action will be executed later. This request should not be retried.
+          500:
+            description: Some unexpected error has occurred. This request should be retried.
+    /getView:
+      get:
+        queryParameters:
+          guid: string
+          view_id: string
+        responses:
+          200:
+            body:
+              application/json:
+                type: object
+                properties:
+                  view:
+                    properties:
+                      result:
+                        type: view_data[]
+          404:
+            description: Data Access request is processed successfully. No resources could be found from this symbol and no further action will be executed later. This request should not be retried.
+          500:
+            description: Some unexpected error has occurred. This request should be retried.
+
+    /saveHolding:
+      post:
+        body:
+          application/json:
+            properties:
+              guid: string
+              view_id: string
+              symbol: string
+              data: holding_data[]
+        responses:
+          200:
+            body:
+              application/json:
+                properties:
+                  saveHolding: response
+          404:
+            description: Data Access request is processed successfully. No resources could be found from this symbol and no further action will be executed later. This request should not be retried.
+          500:
+            description: Some unexpected error has occurred. This request should be retried.
+      get:
+        queryParameters:
+          id:
+            type: string
+            required: false
+          guid:
+            type: string
+            required: true
+          view_id:
+            type: string
+            required: true
+          symbol:
+            type: string
+            required: true
+          date:
+            type: date-only
+            required: false
+          shares:
+            type: integer
+            required: false
+          cost:
+            type: number
+            required: false
+
+        responses:
+          200:
+            body:
+              application/json:
+                properties:
+                  saveHolding: response
+          404:
+            description: Data Access request is processed successfully. No resources could be found from this symbol and no further action will be executed later. This request should not be retried.
+          500:
+            description: Some unexpected error has occurred. This request should be retried.
+
+    /saveSymbol:
+      post:
+        body:
+          application/json:
+            properties:
+              guid: string
+              view_id: string
+              data: symbol_data[]
+        responses:
+          200:
+            body:
+              application/json:
+                properties:
+                  saveSymbol: response
+          404:
+            description: Data Access request is processed successfully. No resources could be found from this symbol and no further action will be executed later. This request should not be retried.
+          500:
+            description: Some unexpected error has occurred. This request should be retried.
+
+    /saveView:
+      post:
+        body:
+          application/json:
+            properties:
+              guid: string
+              data: view_data[]
+        responses:
+          200:
+            body:
+              application/json:
+                properties:
+                  saveView: response
+          400:
+            description: Data Access request is processed successfully. No resources could be found from this symbol and no further action will be executed later. This request should not be retried.
+          500:
+            description: Some unexpected error has occurred. This request should be retried.
+
+    /saveWatchList:
+      post:
+        body:
+          application/json:
+            properties:
+              guid: string
+              data: view_data[]
+        responses:
+          200:
+            body:
+              application/json:
+                properties:
+                  saveView: response
+          400:
+            description: Data Access request is processed successfully. No resources could be found from this symbol and no further action will be executed later. This request should not be retried.
+          500:
+            description: Some unexpected error has occurred. This request should be retried.
